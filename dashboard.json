@@ -1,0 +1,2029 @@
+{
+  "id": null,
+  "uid": "codex-health",
+  "title": "Codex · 访问健康",
+  "description": "本机桌面端、App Server、模型服务与 Clash 的日志观测。",
+  "tags": [
+    "codex",
+    "app-server",
+    "local"
+  ],
+  "timezone": "browser",
+  "schemaVersion": 41,
+  "version": 6,
+  "editable": true,
+  "refresh": "15s",
+  "time": {
+    "from": "now-3d",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "15s",
+      "30s",
+      "1m",
+      "5m",
+      "15m"
+    ],
+    "time_options": [
+      "1h",
+      "6h",
+      "24h",
+      "3d",
+      "7d"
+    ]
+  },
+  "templating": {
+    "list": []
+  },
+  "panels": [
+    {
+      "id": 6,
+      "title": "Clash 拨号超时",
+      "type": "stat",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
+      "description": "所选时间内访问 ChatGPT 或 OpenAI 域名的拨号超时日志条数。0 条表示可用日志里没有匹配记录。",
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "codex-health-local"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "codex-health-local"
+          },
+          "rawQueryText": "SELECT CASE WHEN EXISTS (SELECT 1 FROM sources WHERE source='Clash / Mihomo' AND files > 0)\n     THEN COUNT(*) END AS value FROM proxy WHERE t >= $__from AND t < $__to AND cause='timeout'",
+          "queryText": "SELECT CASE WHEN EXISTS (SELECT 1 FROM sources WHERE source='Clash / Mihomo' AND files > 0)\n     THEN COUNT(*) END AS value FROM proxy WHERE t >= $__from AND t < $__to AND cause='timeout'",
+          "queryType": "table",
+          "timeColumns": []
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "suffix: 条",
+          "noValue": "暂无样本",
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "value": null,
+                "color": "#73BF69"
+              },
+              {
+                "value": 1,
+                "color": "#FF9830"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "values": false
+        }
+      }
+    },
+    {
+      "id": 5,
+      "title": "模型连接失败",
+      "type": "stat",
+      "gridPos": {
+        "x": 4,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
+      "description": "模型 WebSocket 连接失败的日志条数。重试可能产生多条。",
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "codex-health-local"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "codex-health-local"
+          },
+          "rawQueryText": "SELECT COUNT(*) AS value FROM upstream WHERE t >= $__from AND t < $__to AND event='ws_connect_error'",
+          "queryText": "SELECT COUNT(*) AS value FROM upstream WHERE t >= $__from AND t < $__to AND event='ws_connect_error'",
+          "queryType": "table",
+          "timeColumns": []
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "suffix: 条",
+          "noValue": "暂无样本",
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "value": null,
+                "color": "#73BF69"
+              },
+              {
+                "value": 1,
+                "color": "#F2495C"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "values": false
+        }
+      }
+    },
+    {
+      "id": 23,
+      "title": "模型采样重试",
+      "type": "stat",
+      "gridPos": {
+        "x": 8,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
+      "description": "模型请求开始重试的日志条数。原因见下方的上游异常面板。",
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "codex-health-local"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "codex-health-local"
+          },
+          "rawQueryText": "SELECT COUNT(*) AS value FROM upstream WHERE t >= $__from AND t < $__to AND event='model_retry'",
+          "queryText": "SELECT COUNT(*) AS value FROM upstream WHERE t >= $__from AND t < $__to AND event='model_retry'",
+          "queryType": "table",
+          "timeColumns": []
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "suffix: 条",
+          "noValue": "暂无样本",
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "value": null,
+                "color": "#73BF69"
+              },
+              {
+                "value": 1,
+                "color": "#FF9830"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "values": false
+        }
+      }
+    },
+    {
+      "id": 2,
+      "title": "首 token · P95",
+      "type": "stat",
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
+      "description": "从开始到模型首 token。包括后台记录到的 token。",
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "codex-health-local"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "codex-health-local"
+          },
+          "rawQueryText": "WITH points AS (SELECT 0 AS bucket, '首 token' AS metric, ttft_ms AS value FROM turns WHERE t >= $__from AND t < $__to AND ttft_ms IS NOT NULL),\n    ranks AS (SELECT *, ROW_NUMBER() OVER (PARTITION BY bucket, metric ORDER BY value) AS pos,\n        COUNT(*) OVER (PARTITION BY bucket, metric) AS total FROM points)\n    SELECT MAX(CASE WHEN metric = '首 token' AND pos = (total * 95 + 99) / 100\n        THEN value END) AS \"首 token P95\" \n    FROM ranks\n    ",
+          "queryText": "WITH points AS (SELECT 0 AS bucket, '首 token' AS metric, ttft_ms AS value FROM turns WHERE t >= $__from AND t < $__to AND ttft_ms IS NOT NULL),\n    ranks AS (SELECT *, ROW_NUMBER() OVER (PARTITION BY bucket, metric ORDER BY value) AS pos,\n        COUNT(*) OVER (PARTITION BY bucket, metric) AS total FROM points)\n    SELECT MAX(CASE WHEN metric = '首 token' AND pos = (total * 95 + 99) / 100\n        THEN value END) AS \"首 token P95\" \n    FROM ranks\n    ",
+          "queryType": "table",
+          "timeColumns": []
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "noValue": "暂无样本",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#73BF69"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "values": false
+        }
+      }
+    },
+    {
+      "id": 24,
+      "title": "首次工具 · P95",
+      "type": "stat",
+      "gridPos": {
+        "x": 16,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
+      "description": "从一轮开始到首次工具启动，只有发出工具调用的轮次进入统计。",
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "codex-health-local"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "codex-health-local"
+          },
+          "rawQueryText": "WITH points AS (SELECT 0 AS bucket, '首次工具' AS metric, tool_ms AS value FROM turns WHERE t >= $__from AND t < $__to AND tool_ms IS NOT NULL),\n    ranks AS (SELECT *, ROW_NUMBER() OVER (PARTITION BY bucket, metric ORDER BY value) AS pos,\n        COUNT(*) OVER (PARTITION BY bucket, metric) AS total FROM points)\n    SELECT MAX(CASE WHEN metric = '首次工具' AND pos = (total * 95 + 99) / 100\n        THEN value END) AS \"首次工具 P95\" \n    FROM ranks\n    ",
+          "queryText": "WITH points AS (SELECT 0 AS bucket, '首次工具' AS metric, tool_ms AS value FROM turns WHERE t >= $__from AND t < $__to AND tool_ms IS NOT NULL),\n    ranks AS (SELECT *, ROW_NUMBER() OVER (PARTITION BY bucket, metric ORDER BY value) AS pos,\n        COUNT(*) OVER (PARTITION BY bucket, metric) AS total FROM points)\n    SELECT MAX(CASE WHEN metric = '首次工具' AND pos = (total * 95 + 99) / 100\n        THEN value END) AS \"首次工具 P95\" \n    FROM ranks\n    ",
+          "queryType": "table",
+          "timeColumns": []
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "noValue": "暂无样本",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#73BF69"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "values": false
+        }
+      }
+    },
+    {
+      "id": 1,
+      "title": "桌面请求轮次",
+      "type": "stat",
+      "gridPos": {
+        "x": 20,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
+      "description": "采样窗口内有开始事件的主会话轮次。",
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "codex-health-local"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "codex-health-local"
+          },
+          "rawQueryText": "SELECT COUNT(*) AS value FROM turns WHERE t >= $__from AND t < $__to",
+          "queryText": "SELECT COUNT(*) AS value FROM turns WHERE t >= $__from AND t < $__to",
+          "queryType": "table",
+          "timeColumns": []
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "suffix: 轮",
+          "noValue": "暂无样本",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#5794F2"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "values": false
+        }
+      }
+    },
+    {
+      "id": 12,
+      "title": "网络连接",
+      "type": "row",
+      "gridPos": {
+        "x": 0,
+        "y": 4,
+        "w": 24,
+        "h": 1
+      },
+      "description": "",
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "id": 14,
+      "title": "Clash 拨号超时趋势",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 0,
+        "y": 5,
+        "w": 10,
+        "h": 8
+      },
+      "description": "目标为 ChatGPT 或 OpenAI 域名，包含使用这些域名的其他应用流量。",
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "codex-health-local"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "codex-health-local"
+          },
+          "rawQueryText": "SELECT (t / (CASE\n    WHEN $__to - $__from <= 3600000 THEN 60000\n    WHEN $__to - $__from <= 21600000 THEN 300000\n    WHEN $__to - $__from <= 86400000 THEN 900000\n    ELSE 3600000 END)) * (CASE\n    WHEN $__to - $__from <= 3600000 THEN 60000\n    WHEN $__to - $__from <= 21600000 THEN 300000\n    WHEN $__to - $__from <= 86400000 THEN 900000\n    ELSE 3600000 END) / 1000 AS time, SUM(CASE WHEN cause='timeout' AND route='proxy' THEN 1 ELSE 0 END) AS \"经代理超时\", SUM(CASE WHEN cause='timeout' AND route='direct' THEN 1 ELSE 0 END) AS \"直连超时\"\n      FROM proxy WHERE t >= $__from AND t < $__to GROUP BY time ORDER BY time",
+          "queryText": "SELECT (t / (CASE\n    WHEN $__to - $__from <= 3600000 THEN 60000\n    WHEN $__to - $__from <= 21600000 THEN 300000\n    WHEN $__to - $__from <= 86400000 THEN 900000\n    ELSE 3600000 END)) * (CASE\n    WHEN $__to - $__from <= 3600000 THEN 60000\n    WHEN $__to - $__from <= 21600000 THEN 300000\n    WHEN $__to - $__from <= 86400000 THEN 900000\n    ELSE 3600000 END) / 1000 AS time, SUM(CASE WHEN cause='timeout' AND route='proxy' THEN 1 ELSE 0 END) AS \"经代理超时\", SUM(CASE WHEN cause='timeout' AND route='direct' THEN 1 ELSE 0 END) AS \"直连超时\"\n      FROM proxy WHERE t >= $__from AND t < $__to GROUP BY time ORDER BY time",
+          "queryType": "table",
+          "timeColumns": [
+            "time"
+          ]
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 32,
+            "lineWidth": 2,
+            "showPoints": "auto",
+            "pointSize": 4,
+            "spanNulls": false,
+            "axisBorderShow": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "经代理超时"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#5794F2"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "直连超时"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#73BF69"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 13,
+      "title": "模型连接故障与回退",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 10,
+        "y": 5,
+        "w": 14,
+        "h": 8
+      },
+      "description": "上游异常和回退为日志条数。不同事件可能来自同一轮请求。",
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "codex-health-local"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "codex-health-local"
+          },
+          "rawQueryText": "SELECT (t / (CASE\n    WHEN $__to - $__from <= 3600000 THEN 60000\n    WHEN $__to - $__from <= 21600000 THEN 300000\n    WHEN $__to - $__from <= 86400000 THEN 900000\n    ELSE 3600000 END)) * (CASE\n    WHEN $__to - $__from <= 3600000 THEN 60000\n    WHEN $__to - $__from <= 21600000 THEN 300000\n    WHEN $__to - $__from <= 86400000 THEN 900000\n    ELSE 3600000 END) / 1000 AS time, SUM(CASE WHEN event = 'ws_connect_error' THEN 1 ELSE 0 END) AS \"WebSocket 连接失败\", SUM(CASE WHEN event = 'model_retry' THEN 1 ELSE 0 END) AS \"模型采样重试\", SUM(CASE WHEN event = 'prewarm_error' THEN 1 ELSE 0 END) AS \"预热失败\", SUM(CASE WHEN event = 'http_fallback' THEN 1 ELSE 0 END) AS \"回退 HTTP\"\n      FROM upstream WHERE t >= $__from AND t < $__to GROUP BY time ORDER BY time",
+          "queryText": "SELECT (t / (CASE\n    WHEN $__to - $__from <= 3600000 THEN 60000\n    WHEN $__to - $__from <= 21600000 THEN 300000\n    WHEN $__to - $__from <= 86400000 THEN 900000\n    ELSE 3600000 END)) * (CASE\n    WHEN $__to - $__from <= 3600000 THEN 60000\n    WHEN $__to - $__from <= 21600000 THEN 300000\n    WHEN $__to - $__from <= 86400000 THEN 900000\n    ELSE 3600000 END) / 1000 AS time, SUM(CASE WHEN event = 'ws_connect_error' THEN 1 ELSE 0 END) AS \"WebSocket 连接失败\", SUM(CASE WHEN event = 'model_retry' THEN 1 ELSE 0 END) AS \"模型采样重试\", SUM(CASE WHEN event = 'prewarm_error' THEN 1 ELSE 0 END) AS \"预热失败\", SUM(CASE WHEN event = 'http_fallback' THEN 1 ELSE 0 END) AS \"回退 HTTP\"\n      FROM upstream WHERE t >= $__from AND t < $__to GROUP BY time ORDER BY time",
+          "queryType": "table",
+          "timeColumns": [
+            "time"
+          ]
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 32,
+            "lineWidth": 2,
+            "showPoints": "auto",
+            "pointSize": 4,
+            "spanNulls": false,
+            "axisBorderShow": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "WebSocket 连接失败"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#5794F2"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "模型采样重试"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#73BF69"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "预热失败"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#FF9830"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "回退 HTTP"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#F2495C"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 25,
+      "title": "codex 组节点观测与拨号超时",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 0,
+        "y": 13,
+        "w": 24,
+        "h": 8
+      },
+      "description": "蓝点是首次在连接日志里看到不同节点的时间，红点是 codex 组实际记录到的拨号超时。两条点列按同一时间轴对齐。",
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "codex-health-local"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "codex-health-local"
+          },
+          "rawQueryText": "SELECT t/1000.0 AS time,\n    MAX(CASE WHEN event='node_observed' THEN 2 END) AS \"观测到不同节点\",\n    MAX(CASE WHEN event='timeout' THEN 1 END) AS \"拨号超时\"\n    FROM clash_timeline WHERE t >= $__from AND t < $__to GROUP BY t ORDER BY t",
+          "queryText": "SELECT t/1000.0 AS time,\n    MAX(CASE WHEN event='node_observed' THEN 2 END) AS \"观测到不同节点\",\n    MAX(CASE WHEN event='timeout' THEN 1 END) AS \"拨号超时\"\n    FROM clash_timeline WHERE t >= $__from AND t < $__to GROUP BY t ORDER BY t",
+          "queryType": "table",
+          "timeColumns": [
+            "time"
+          ]
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "lineWidth": 0,
+            "showPoints": "always",
+            "pointSize": 8,
+            "spanNulls": false,
+            "axisBorderShow": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisPlacement": "hidden"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "观测到不同节点"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#5794F2"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "拨号超时"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#F2495C"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 26,
+      "title": "codex 组节点与超时明细",
+      "type": "table",
+      "gridPos": {
+        "x": 0,
+        "y": 21,
+        "w": 24,
+        "h": 7
+      },
+      "description": "超时行的上一观测节点来自最近一条转发日志。节点变化行的时间以首次看到不同节点的连接为准。",
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "codex-health-local"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "codex-health-local"
+          },
+          "rawQueryText": "SELECT t/1000.0 AS \"时间\",\n      CASE event WHEN 'node_observed' THEN '观测到不同节点' ELSE '拨号超时' END AS \"事件\",\n      previous_node AS \"上一观测节点\", previous_t/1000.0 AS \"上一观测时间\",\n      node AS \"新观测节点\",\n      CASE cause WHEN 'connect_timeout' THEN '建立连接超时' WHEN 'dial_timeout' THEN '拨号超时' END AS \"超时阶段\"\n      FROM clash_timeline WHERE t >= $__from AND t < $__to ORDER BY t DESC LIMIT 50",
+          "queryText": "SELECT t/1000.0 AS \"时间\",\n      CASE event WHEN 'node_observed' THEN '观测到不同节点' ELSE '拨号超时' END AS \"事件\",\n      previous_node AS \"上一观测节点\", previous_t/1000.0 AS \"上一观测时间\",\n      node AS \"新观测节点\",\n      CASE cause WHEN 'connect_timeout' THEN '建立连接超时' WHEN 'dial_timeout' THEN '拨号超时' END AS \"超时阶段\"\n      FROM clash_timeline WHERE t >= $__from AND t < $__to ORDER BY t DESC LIMIT 50",
+          "queryType": "table",
+          "timeColumns": [
+            "时间",
+            "上一观测时间"
+          ]
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "—",
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      }
+    },
+    {
+      "id": 15,
+      "title": "上游异常原因",
+      "type": "table",
+      "gridPos": {
+        "x": 0,
+        "y": 28,
+        "w": 24,
+        "h": 5
+      },
+      "description": "按日志中明确的错误字符串分类。",
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "codex-health-local"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "codex-health-local"
+          },
+          "rawQueryText": "SELECT CASE cause WHEN 'timeout' THEN '超时' WHEN 'refused' THEN '连接被拒绝'\n      WHEN 'reset' THEN '连接重置' WHEN 'tls_handshake' THEN 'TLS / 握手' WHEN 'capacity' THEN '容量 / 429'\n      WHEN 'dns' THEN 'DNS' ELSE '日志无明确原因' END AS \"原因\",\n      SUM(CASE WHEN event = 'ws_connect_error' THEN 1 ELSE 0 END) AS \"WebSocket 连接失败\", SUM(CASE WHEN event = 'model_retry' THEN 1 ELSE 0 END) AS \"模型采样重试\", SUM(CASE WHEN event = 'prewarm_error' THEN 1 ELSE 0 END) AS \"预热失败\"\n      FROM upstream WHERE t >= $__from AND t < $__to AND event != 'http_fallback' GROUP BY cause ORDER BY COUNT(*) DESC",
+          "queryText": "SELECT CASE cause WHEN 'timeout' THEN '超时' WHEN 'refused' THEN '连接被拒绝'\n      WHEN 'reset' THEN '连接重置' WHEN 'tls_handshake' THEN 'TLS / 握手' WHEN 'capacity' THEN '容量 / 429'\n      WHEN 'dns' THEN 'DNS' ELSE '日志无明确原因' END AS \"原因\",\n      SUM(CASE WHEN event = 'ws_connect_error' THEN 1 ELSE 0 END) AS \"WebSocket 连接失败\", SUM(CASE WHEN event = 'model_retry' THEN 1 ELSE 0 END) AS \"模型采样重试\", SUM(CASE WHEN event = 'prewarm_error' THEN 1 ELSE 0 END) AS \"预热失败\"\n      FROM upstream WHERE t >= $__from AND t < $__to AND event != 'http_fallback' GROUP BY cause ORDER BY COUNT(*) DESC",
+          "queryType": "table",
+          "timeColumns": []
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "—",
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      }
+    },
+    {
+      "id": 27,
+      "title": "DNS 解析与上游",
+      "type": "row",
+      "gridPos": {
+        "x": 0,
+        "y": 33,
+        "w": 24,
+        "h": 1
+      },
+      "description": "",
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "id": 28,
+      "title": "DNS 错误与代理超时",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 0,
+        "y": 34,
+        "w": 14,
+        "h": 8
+      },
+      "description": "按时间分桶对照 Mihomo 日志。解析失败涵盖本机应用，上游取消单独显示在旁边的表里。",
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "codex-health-local"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "codex-health-local"
+          },
+          "rawQueryText": "WITH events AS (\n        SELECT t, event FROM dns_events WHERE t >= $__from AND t < $__to\n        UNION ALL\n        SELECT t, 'proxy_timeout' FROM clash_timeline WHERE t >= $__from AND t < $__to AND event='timeout'\n      )\n      SELECT (t / (CASE\n    WHEN $__to - $__from <= 3600000 THEN 60000\n    WHEN $__to - $__from <= 21600000 THEN 300000\n    WHEN $__to - $__from <= 86400000 THEN 900000\n    ELSE 3600000 END)) * (CASE\n    WHEN $__to - $__from <= 3600000 THEN 60000\n    WHEN $__to - $__from <= 21600000 THEN 300000\n    WHEN $__to - $__from <= 86400000 THEN 900000\n    ELSE 3600000 END)/1000 AS time, SUM(CASE WHEN event='resolve_error' THEN 1 ELSE 0 END) AS \"域名解析失败\", SUM(CASE WHEN event='upstream_error' THEN 1 ELSE 0 END) AS \"DNS 上游连接异常\", SUM(CASE WHEN event='proxy_timeout' THEN 1 ELSE 0 END) AS \"codex 组拨号超时\"\n      FROM events GROUP BY time ORDER BY time",
+          "queryText": "WITH events AS (\n        SELECT t, event FROM dns_events WHERE t >= $__from AND t < $__to\n        UNION ALL\n        SELECT t, 'proxy_timeout' FROM clash_timeline WHERE t >= $__from AND t < $__to AND event='timeout'\n      )\n      SELECT (t / (CASE\n    WHEN $__to - $__from <= 3600000 THEN 60000\n    WHEN $__to - $__from <= 21600000 THEN 300000\n    WHEN $__to - $__from <= 86400000 THEN 900000\n    ELSE 3600000 END)) * (CASE\n    WHEN $__to - $__from <= 3600000 THEN 60000\n    WHEN $__to - $__from <= 21600000 THEN 300000\n    WHEN $__to - $__from <= 86400000 THEN 900000\n    ELSE 3600000 END)/1000 AS time, SUM(CASE WHEN event='resolve_error' THEN 1 ELSE 0 END) AS \"域名解析失败\", SUM(CASE WHEN event='upstream_error' THEN 1 ELSE 0 END) AS \"DNS 上游连接异常\", SUM(CASE WHEN event='proxy_timeout' THEN 1 ELSE 0 END) AS \"codex 组拨号超时\"\n      FROM events GROUP BY time ORDER BY time",
+          "queryType": "table",
+          "timeColumns": [
+            "time"
+          ]
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 32,
+            "lineWidth": 2,
+            "showPoints": "auto",
+            "pointSize": 4,
+            "spanNulls": false,
+            "axisBorderShow": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "域名解析失败"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#5794F2"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "DNS 上游连接异常"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#73BF69"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "codex 组拨号超时"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#FF9830"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 29,
+      "title": "DNS 上游走向",
+      "type": "table",
+      "gridPos": {
+        "x": 14,
+        "y": 34,
+        "w": 10,
+        "h": 8
+      },
+      "description": "按配置识别 DNS 上游，展示 Mihomo 记录的实际出站。连接与取消均以日志条数统计。",
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "codex-health-local"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "codex-health-local"
+          },
+          "rawQueryText": "SELECT target AS \"DNS 上游\", COALESCE(route, '未记录') AS \"出站\",\n      SUM(CASE WHEN event='upstream_routed' THEN 1 ELSE 0 END) AS \"连接有记录\",\n      SUM(CASE WHEN event='upstream_error' THEN 1 ELSE 0 END) AS \"异常\",\n      SUM(CASE WHEN event='upstream_canceled' THEN 1 ELSE 0 END) AS \"取消\"\n      FROM dns_events WHERE t >= $__from AND t < $__to AND event!='resolve_error'\n      GROUP BY target, route ORDER BY COUNT(*) DESC LIMIT 25",
+          "queryText": "SELECT target AS \"DNS 上游\", COALESCE(route, '未记录') AS \"出站\",\n      SUM(CASE WHEN event='upstream_routed' THEN 1 ELSE 0 END) AS \"连接有记录\",\n      SUM(CASE WHEN event='upstream_error' THEN 1 ELSE 0 END) AS \"异常\",\n      SUM(CASE WHEN event='upstream_canceled' THEN 1 ELSE 0 END) AS \"取消\"\n      FROM dns_events WHERE t >= $__from AND t < $__to AND event!='resolve_error'\n      GROUP BY target, route ORDER BY COUNT(*) DESC LIMIT 25",
+          "queryType": "table",
+          "timeColumns": []
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "—",
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      }
+    },
+    {
+      "id": 30,
+      "title": "DNS 日志明细",
+      "type": "table",
+      "gridPos": {
+        "x": 0,
+        "y": 42,
+        "w": 24,
+        "h": 8
+      },
+      "description": "每行对应一条 Mihomo 日志。节点列仅在日志记录实际节点时展示。上游连接记录只证明到解析器的连接阶段。",
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "codex-health-local"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "codex-health-local"
+          },
+          "rawQueryText": "SELECT strftime('%Y-%m-%dT%H:%M:%fZ', t/1000.0, 'unixepoch') AS \"时间\",\n      CASE event WHEN 'resolve_error' THEN '域名解析失败' WHEN 'upstream_error' THEN '上游连接异常'\n      WHEN 'upstream_canceled' THEN '上游连接取消' WHEN 'upstream_routed' THEN '上游连接有记录' END AS \"阶段\",\n      target AS \"DNS 上游 / 域名范围\", route AS \"出站\", node AS \"实际节点\",\n      CASE cause WHEN 'timeout' THEN '连接超时' WHEN 'dns' THEN '解析失败'\n      WHEN 'refused' THEN '连接被拒绝' WHEN 'reset' THEN '连接被重置'\n      WHEN 'tls_handshake' THEN 'TLS / 握手' WHEN 'canceled' THEN '取消'\n      WHEN 'other' THEN '其他连接错误' END AS \"原因\"\n      FROM dns_events WHERE t >= $__from AND t < $__to ORDER BY t DESC LIMIT 80",
+          "queryText": "SELECT strftime('%Y-%m-%dT%H:%M:%fZ', t/1000.0, 'unixepoch') AS \"时间\",\n      CASE event WHEN 'resolve_error' THEN '域名解析失败' WHEN 'upstream_error' THEN '上游连接异常'\n      WHEN 'upstream_canceled' THEN '上游连接取消' WHEN 'upstream_routed' THEN '上游连接有记录' END AS \"阶段\",\n      target AS \"DNS 上游 / 域名范围\", route AS \"出站\", node AS \"实际节点\",\n      CASE cause WHEN 'timeout' THEN '连接超时' WHEN 'dns' THEN '解析失败'\n      WHEN 'refused' THEN '连接被拒绝' WHEN 'reset' THEN '连接被重置'\n      WHEN 'tls_handshake' THEN 'TLS / 握手' WHEN 'canceled' THEN '取消'\n      WHEN 'other' THEN '其他连接错误' END AS \"原因\"\n      FROM dns_events WHERE t >= $__from AND t < $__to ORDER BY t DESC LIMIT 80",
+          "queryType": "table",
+          "timeColumns": [
+            "时间"
+          ]
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "—",
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      }
+    },
+    {
+      "id": 16,
+      "title": "会话体验",
+      "type": "row",
+      "gridPos": {
+        "x": 0,
+        "y": 50,
+        "w": 24,
+        "h": 1
+      },
+      "description": "",
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "id": 17,
+      "title": "首 token、首次工具与总耗时",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 0,
+        "y": 51,
+        "w": 14,
+        "h": 8
+      },
+      "description": "每条线使用该指标有记录的轮次。总耗时包含工具等待和已中断的轮次。",
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "codex-health-local"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "codex-health-local"
+          },
+          "rawQueryText": "WITH points AS (SELECT (t / (CASE\n    WHEN $__to - $__from <= 3600000 THEN 60000\n    WHEN $__to - $__from <= 21600000 THEN 300000\n    WHEN $__to - $__from <= 86400000 THEN 900000\n    ELSE 3600000 END)) * (CASE\n    WHEN $__to - $__from <= 3600000 THEN 60000\n    WHEN $__to - $__from <= 21600000 THEN 300000\n    WHEN $__to - $__from <= 86400000 THEN 900000\n    ELSE 3600000 END) AS bucket, '首 token' AS metric, ttft_ms AS value FROM turns WHERE t >= $__from AND t < $__to AND ttft_ms IS NOT NULL\nUNION ALL\nSELECT (t / (CASE\n    WHEN $__to - $__from <= 3600000 THEN 60000\n    WHEN $__to - $__from <= 21600000 THEN 300000\n    WHEN $__to - $__from <= 86400000 THEN 900000\n    ELSE 3600000 END)) * (CASE\n    WHEN $__to - $__from <= 3600000 THEN 60000\n    WHEN $__to - $__from <= 21600000 THEN 300000\n    WHEN $__to - $__from <= 86400000 THEN 900000\n    ELSE 3600000 END) AS bucket, '首次工具' AS metric, tool_ms AS value FROM turns WHERE t >= $__from AND t < $__to AND tool_ms IS NOT NULL\nUNION ALL\nSELECT (t / (CASE\n    WHEN $__to - $__from <= 3600000 THEN 60000\n    WHEN $__to - $__from <= 21600000 THEN 300000\n    WHEN $__to - $__from <= 86400000 THEN 900000\n    ELSE 3600000 END)) * (CASE\n    WHEN $__to - $__from <= 3600000 THEN 60000\n    WHEN $__to - $__from <= 21600000 THEN 300000\n    WHEN $__to - $__from <= 86400000 THEN 900000\n    ELSE 3600000 END) AS bucket, '总耗时' AS metric, total_ms AS value FROM turns WHERE t >= $__from AND t < $__to AND total_ms IS NOT NULL),\n    ranks AS (SELECT *, ROW_NUMBER() OVER (PARTITION BY bucket, metric ORDER BY value) AS pos,\n        COUNT(*) OVER (PARTITION BY bucket, metric) AS total FROM points)\n    SELECT bucket / 1000 AS time, MAX(CASE WHEN metric = '首 token' AND pos = (total * 95 + 99) / 100\n        THEN value END) AS \"首 token P95\" , MAX(CASE WHEN metric = '首次工具' AND pos = (total * 95 + 99) / 100\n        THEN value END) AS \"首次工具 P95\" , MAX(CASE WHEN metric = '总耗时' AND pos = (total * 95 + 99) / 100\n        THEN value END) AS \"总耗时 P95\" \n    FROM ranks\n    GROUP BY bucket ORDER BY bucket",
+          "queryText": "WITH points AS (SELECT (t / (CASE\n    WHEN $__to - $__from <= 3600000 THEN 60000\n    WHEN $__to - $__from <= 21600000 THEN 300000\n    WHEN $__to - $__from <= 86400000 THEN 900000\n    ELSE 3600000 END)) * (CASE\n    WHEN $__to - $__from <= 3600000 THEN 60000\n    WHEN $__to - $__from <= 21600000 THEN 300000\n    WHEN $__to - $__from <= 86400000 THEN 900000\n    ELSE 3600000 END) AS bucket, '首 token' AS metric, ttft_ms AS value FROM turns WHERE t >= $__from AND t < $__to AND ttft_ms IS NOT NULL\nUNION ALL\nSELECT (t / (CASE\n    WHEN $__to - $__from <= 3600000 THEN 60000\n    WHEN $__to - $__from <= 21600000 THEN 300000\n    WHEN $__to - $__from <= 86400000 THEN 900000\n    ELSE 3600000 END)) * (CASE\n    WHEN $__to - $__from <= 3600000 THEN 60000\n    WHEN $__to - $__from <= 21600000 THEN 300000\n    WHEN $__to - $__from <= 86400000 THEN 900000\n    ELSE 3600000 END) AS bucket, '首次工具' AS metric, tool_ms AS value FROM turns WHERE t >= $__from AND t < $__to AND tool_ms IS NOT NULL\nUNION ALL\nSELECT (t / (CASE\n    WHEN $__to - $__from <= 3600000 THEN 60000\n    WHEN $__to - $__from <= 21600000 THEN 300000\n    WHEN $__to - $__from <= 86400000 THEN 900000\n    ELSE 3600000 END)) * (CASE\n    WHEN $__to - $__from <= 3600000 THEN 60000\n    WHEN $__to - $__from <= 21600000 THEN 300000\n    WHEN $__to - $__from <= 86400000 THEN 900000\n    ELSE 3600000 END) AS bucket, '总耗时' AS metric, total_ms AS value FROM turns WHERE t >= $__from AND t < $__to AND total_ms IS NOT NULL),\n    ranks AS (SELECT *, ROW_NUMBER() OVER (PARTITION BY bucket, metric ORDER BY value) AS pos,\n        COUNT(*) OVER (PARTITION BY bucket, metric) AS total FROM points)\n    SELECT bucket / 1000 AS time, MAX(CASE WHEN metric = '首 token' AND pos = (total * 95 + 99) / 100\n        THEN value END) AS \"首 token P95\" , MAX(CASE WHEN metric = '首次工具' AND pos = (total * 95 + 99) / 100\n        THEN value END) AS \"首次工具 P95\" , MAX(CASE WHEN metric = '总耗时' AND pos = (total * 95 + 99) / 100\n        THEN value END) AS \"总耗时 P95\" \n    FROM ranks\n    GROUP BY bucket ORDER BY bucket",
+          "queryType": "table",
+          "timeColumns": [
+            "time"
+          ]
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "min": 0,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 9,
+            "lineWidth": 2,
+            "showPoints": "auto",
+            "pointSize": 4,
+            "spanNulls": false,
+            "axisBorderShow": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "首 token P95"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#5794F2"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "首次工具 P95"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#73BF69"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "总耗时 P95"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#FF9830"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 18,
+      "title": "轮次日志状态",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 14,
+        "y": 51,
+        "w": 10,
+        "h": 8
+      },
+      "description": "横轴按轮次开始时间统计。",
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "codex-health-local"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "codex-health-local"
+          },
+          "rawQueryText": "SELECT (t / (CASE\n    WHEN $__to - $__from <= 3600000 THEN 60000\n    WHEN $__to - $__from <= 21600000 THEN 300000\n    WHEN $__to - $__from <= 86400000 THEN 900000\n    ELSE 3600000 END)) * (CASE\n    WHEN $__to - $__from <= 3600000 THEN 60000\n    WHEN $__to - $__from <= 21600000 THEN 300000\n    WHEN $__to - $__from <= 86400000 THEN 900000\n    ELSE 3600000 END) / 1000 AS time, SUM(CASE WHEN status = 'recorded_end' THEN 1 ELSE 0 END) AS \"有结束记录\", SUM(CASE WHEN status = 'interrupted' THEN 1 ELSE 0 END) AS \"已中断\", SUM(CASE WHEN status = 'unknown' THEN 1 ELSE 0 END) AS \"结束状态未观测\"\n      FROM turns WHERE t >= $__from AND t < $__to GROUP BY time ORDER BY time",
+          "queryText": "SELECT (t / (CASE\n    WHEN $__to - $__from <= 3600000 THEN 60000\n    WHEN $__to - $__from <= 21600000 THEN 300000\n    WHEN $__to - $__from <= 86400000 THEN 900000\n    ELSE 3600000 END)) * (CASE\n    WHEN $__to - $__from <= 3600000 THEN 60000\n    WHEN $__to - $__from <= 21600000 THEN 300000\n    WHEN $__to - $__from <= 86400000 THEN 900000\n    ELSE 3600000 END) / 1000 AS time, SUM(CASE WHEN status = 'recorded_end' THEN 1 ELSE 0 END) AS \"有结束记录\", SUM(CASE WHEN status = 'interrupted' THEN 1 ELSE 0 END) AS \"已中断\", SUM(CASE WHEN status = 'unknown' THEN 1 ELSE 0 END) AS \"结束状态未观测\"\n      FROM turns WHERE t >= $__from AND t < $__to GROUP BY time ORDER BY time",
+          "queryType": "table",
+          "timeColumns": [
+            "time"
+          ]
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 32,
+            "lineWidth": 2,
+            "showPoints": "auto",
+            "pointSize": 4,
+            "spanNulls": false,
+            "axisBorderShow": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "有结束记录"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#5794F2"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "已中断"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#73BF69"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "结束状态未观测"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#FF9830"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 19,
+      "title": "近期最慢的轮次",
+      "type": "table",
+      "gridPos": {
+        "x": 0,
+        "y": 59,
+        "w": 24,
+        "h": 8
+      },
+      "description": "展示所选时段总耗时最高的 20 轮。",
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "codex-health-local"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "codex-health-local"
+          },
+          "rawQueryText": "SELECT t/1000.0 AS time, ttft_ms AS \"首 token\", tool_ms AS \"首次工具\",\n      total_ms AS \"总耗时\", tools AS \"工具调用\",\n      CASE status WHEN 'interrupted' THEN '已中断' ELSE '有结束记录' END AS \"状态\"\n      FROM turns WHERE t >= $__from AND t < $__to AND total_ms IS NOT NULL ORDER BY total_ms DESC LIMIT 20",
+          "queryText": "SELECT t/1000.0 AS time, ttft_ms AS \"首 token\", tool_ms AS \"首次工具\",\n      total_ms AS \"总耗时\", tools AS \"工具调用\",\n      CASE status WHEN 'interrupted' THEN '已中断' ELSE '有结束记录' END AS \"状态\"\n      FROM turns WHERE t >= $__from AND t < $__to AND total_ms IS NOT NULL ORDER BY total_ms DESC LIMIT 20",
+          "queryType": "table",
+          "timeColumns": [
+            "time"
+          ]
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "—",
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "首 token"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "ms"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "首次工具"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "ms"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "总耗时"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "ms"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      }
+    },
+    {
+      "id": 22,
+      "title": "采集状态",
+      "type": "row",
+      "gridPos": {
+        "x": 0,
+        "y": 67,
+        "w": 24,
+        "h": 1
+      },
+      "description": "",
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "id": 21,
+      "title": "实时采集状态",
+      "type": "table",
+      "gridPos": {
+        "x": 0,
+        "y": 68,
+        "w": 10,
+        "h": 6
+      },
+      "description": "显示采集器最近一次成功提交的时间。持续增加的延迟表示需要检查采集进程。",
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "codex-health-local"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "codex-health-local"
+          },
+          "rawQueryText": "SELECT captured_at/1000.0 AS \"最近采集\", window_start/1000.0 AS \"回看起点\",\n      MAX(0, CAST(strftime('%s','now') AS INTEGER) - captured_at/1000) AS \"数据延迟（秒）\"\n      FROM capture",
+          "queryText": "SELECT captured_at/1000.0 AS \"最近采集\", window_start/1000.0 AS \"回看起点\",\n      MAX(0, CAST(strftime('%s','now') AS INTEGER) - captured_at/1000) AS \"数据延迟（秒）\"\n      FROM capture",
+          "queryType": "table",
+          "timeColumns": [
+            "最近采集",
+            "回看起点"
+          ]
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "—",
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      }
+    },
+    {
+      "id": 20,
+      "title": "数据来源与覆盖",
+      "type": "table",
+      "gridPos": {
+        "x": 10,
+        "y": 68,
+        "w": 14,
+        "h": 6
+      },
+      "description": "显示最近一次扫描的读取情况。空白时段表示没有可用样本。",
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "codex-health-local"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "codex-health-local"
+          },
+          "rawQueryText": "SELECT source AS \"来源\", status AS \"读取状态\", files AS \"文件\",\n      last_write/1000.0 AS \"最近写入\", note AS \"采样内容\" FROM sources",
+          "queryText": "SELECT source AS \"来源\", status AS \"读取状态\", files AS \"文件\",\n      last_write/1000.0 AS \"最近写入\", note AS \"采样内容\" FROM sources",
+          "queryType": "table",
+          "timeColumns": [
+            "最近写入"
+          ]
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "—",
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      }
+    },
+    {
+      "id": 7,
+      "title": "App Server 诊断",
+      "type": "row",
+      "gridPos": {
+        "x": 0,
+        "y": 74,
+        "w": 24,
+        "h": 1
+      },
+      "description": "",
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "id": 3,
+      "title": "App Server RPC · P95",
+      "type": "stat",
+      "gridPos": {
+        "x": 0,
+        "y": 75,
+        "w": 14,
+        "h": 4
+      },
+      "description": "桌面端已匹配到的 JSON-RPC 返回耗时，含各类管理和后台请求。",
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "codex-health-local"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "codex-health-local"
+          },
+          "rawQueryText": "WITH points AS (SELECT 0 AS bucket, 'RPC' AS metric, ms AS value FROM rpc WHERE t >= $__from AND t < $__to AND ms IS NOT NULL),\n    ranks AS (SELECT *, ROW_NUMBER() OVER (PARTITION BY bucket, metric ORDER BY value) AS pos,\n        COUNT(*) OVER (PARTITION BY bucket, metric) AS total FROM points)\n    SELECT MAX(CASE WHEN metric = 'RPC' AND pos = (total * 95 + 99) / 100\n        THEN value END) AS \"RPC P95\" \n    FROM ranks\n    ",
+          "queryText": "WITH points AS (SELECT 0 AS bucket, 'RPC' AS metric, ms AS value FROM rpc WHERE t >= $__from AND t < $__to AND ms IS NOT NULL),\n    ranks AS (SELECT *, ROW_NUMBER() OVER (PARTITION BY bucket, metric ORDER BY value) AS pos,\n        COUNT(*) OVER (PARTITION BY bucket, metric) AS total FROM points)\n    SELECT MAX(CASE WHEN metric = 'RPC' AND pos = (total * 95 + 99) / 100\n        THEN value END) AS \"RPC P95\" \n    FROM ranks\n    ",
+          "queryType": "table",
+          "timeColumns": []
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "noValue": "暂无样本",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#5794F2"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "values": false
+        }
+      }
+    },
+    {
+      "id": 4,
+      "title": "RPC 返回错误率",
+      "type": "stat",
+      "gridPos": {
+        "x": 14,
+        "y": 75,
+        "w": 10,
+        "h": 4
+      },
+      "description": "分母是具有返回日志的请求，包含业务错误。",
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "codex-health-local"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "codex-health-local"
+          },
+          "rawQueryText": "SELECT 100.0 * AVG(error) AS value FROM rpc WHERE t >= $__from AND t < $__to",
+          "queryText": "SELECT 100.0 * AVG(error) AS value FROM rpc WHERE t >= $__from AND t < $__to",
+          "queryType": "table",
+          "timeColumns": []
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "noValue": "暂无样本",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#FF9830"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "values": false
+        }
+      }
+    },
+    {
+      "id": 8,
+      "title": "RPC 返回与排队耗时",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 0,
+        "y": 79,
+        "w": 14,
+        "h": 8
+      },
+      "description": "分位数按每个时间桶内的已返回请求计算。",
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "codex-health-local"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "codex-health-local"
+          },
+          "rawQueryText": "WITH points AS (SELECT (t / (CASE\n    WHEN $__to - $__from <= 3600000 THEN 60000\n    WHEN $__to - $__from <= 21600000 THEN 300000\n    WHEN $__to - $__from <= 86400000 THEN 900000\n    ELSE 3600000 END)) * (CASE\n    WHEN $__to - $__from <= 3600000 THEN 60000\n    WHEN $__to - $__from <= 21600000 THEN 300000\n    WHEN $__to - $__from <= 86400000 THEN 900000\n    ELSE 3600000 END) AS bucket, '返回' AS metric, ms AS value FROM rpc WHERE t >= $__from AND t < $__to AND ms IS NOT NULL\nUNION ALL\nSELECT (t / (CASE\n    WHEN $__to - $__from <= 3600000 THEN 60000\n    WHEN $__to - $__from <= 21600000 THEN 300000\n    WHEN $__to - $__from <= 86400000 THEN 900000\n    ELSE 3600000 END)) * (CASE\n    WHEN $__to - $__from <= 3600000 THEN 60000\n    WHEN $__to - $__from <= 21600000 THEN 300000\n    WHEN $__to - $__from <= 86400000 THEN 900000\n    ELSE 3600000 END) AS bucket, '排队' AS metric, queue_ms AS value FROM rpc WHERE t >= $__from AND t < $__to AND queue_ms IS NOT NULL),\n    ranks AS (SELECT *, ROW_NUMBER() OVER (PARTITION BY bucket, metric ORDER BY value) AS pos,\n        COUNT(*) OVER (PARTITION BY bucket, metric) AS total FROM points)\n    SELECT bucket / 1000 AS time, MAX(CASE WHEN metric = '返回' AND pos = (total * 50 + 99) / 100\n        THEN value END) AS \"返回 P50\" , MAX(CASE WHEN metric = '返回' AND pos = (total * 95 + 99) / 100\n        THEN value END) AS \"返回 P95\" , MAX(CASE WHEN metric = '排队' AND pos = (total * 95 + 99) / 100\n        THEN value END) AS \"排队 P95\" \n    FROM ranks\n    GROUP BY bucket ORDER BY bucket",
+          "queryText": "WITH points AS (SELECT (t / (CASE\n    WHEN $__to - $__from <= 3600000 THEN 60000\n    WHEN $__to - $__from <= 21600000 THEN 300000\n    WHEN $__to - $__from <= 86400000 THEN 900000\n    ELSE 3600000 END)) * (CASE\n    WHEN $__to - $__from <= 3600000 THEN 60000\n    WHEN $__to - $__from <= 21600000 THEN 300000\n    WHEN $__to - $__from <= 86400000 THEN 900000\n    ELSE 3600000 END) AS bucket, '返回' AS metric, ms AS value FROM rpc WHERE t >= $__from AND t < $__to AND ms IS NOT NULL\nUNION ALL\nSELECT (t / (CASE\n    WHEN $__to - $__from <= 3600000 THEN 60000\n    WHEN $__to - $__from <= 21600000 THEN 300000\n    WHEN $__to - $__from <= 86400000 THEN 900000\n    ELSE 3600000 END)) * (CASE\n    WHEN $__to - $__from <= 3600000 THEN 60000\n    WHEN $__to - $__from <= 21600000 THEN 300000\n    WHEN $__to - $__from <= 86400000 THEN 900000\n    ELSE 3600000 END) AS bucket, '排队' AS metric, queue_ms AS value FROM rpc WHERE t >= $__from AND t < $__to AND queue_ms IS NOT NULL),\n    ranks AS (SELECT *, ROW_NUMBER() OVER (PARTITION BY bucket, metric ORDER BY value) AS pos,\n        COUNT(*) OVER (PARTITION BY bucket, metric) AS total FROM points)\n    SELECT bucket / 1000 AS time, MAX(CASE WHEN metric = '返回' AND pos = (total * 50 + 99) / 100\n        THEN value END) AS \"返回 P50\" , MAX(CASE WHEN metric = '返回' AND pos = (total * 95 + 99) / 100\n        THEN value END) AS \"返回 P95\" , MAX(CASE WHEN metric = '排队' AND pos = (total * 95 + 99) / 100\n        THEN value END) AS \"排队 P95\" \n    FROM ranks\n    GROUP BY bucket ORDER BY bucket",
+          "queryType": "table",
+          "timeColumns": [
+            "time"
+          ]
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "min": 0,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 9,
+            "lineWidth": 2,
+            "showPoints": "auto",
+            "pointSize": 4,
+            "spanNulls": false,
+            "axisBorderShow": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "返回 P50"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#5794F2"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "返回 P95"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#73BF69"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "排队 P95"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#FF9830"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 9,
+      "title": "JSON-RPC 返回量",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 14,
+        "y": 79,
+        "w": 10,
+        "h": 8
+      },
+      "description": "正常返回表示该响应无 JSON-RPC 错误码。",
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "codex-health-local"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "codex-health-local"
+          },
+          "rawQueryText": "SELECT (t / (CASE\n    WHEN $__to - $__from <= 3600000 THEN 60000\n    WHEN $__to - $__from <= 21600000 THEN 300000\n    WHEN $__to - $__from <= 86400000 THEN 900000\n    ELSE 3600000 END)) * (CASE\n    WHEN $__to - $__from <= 3600000 THEN 60000\n    WHEN $__to - $__from <= 21600000 THEN 300000\n    WHEN $__to - $__from <= 86400000 THEN 900000\n    ELSE 3600000 END) / 1000 AS time, SUM(CASE WHEN error = 0 THEN 1 ELSE 0 END) AS \"正常返回\", SUM(CASE WHEN error = 1 THEN 1 ELSE 0 END) AS \"错误返回\", SUM(CASE WHEN timeout = 1 THEN 1 ELSE 0 END) AS \"返回里标记超时\"\n      FROM rpc WHERE t >= $__from AND t < $__to GROUP BY time ORDER BY time",
+          "queryText": "SELECT (t / (CASE\n    WHEN $__to - $__from <= 3600000 THEN 60000\n    WHEN $__to - $__from <= 21600000 THEN 300000\n    WHEN $__to - $__from <= 86400000 THEN 900000\n    ELSE 3600000 END)) * (CASE\n    WHEN $__to - $__from <= 3600000 THEN 60000\n    WHEN $__to - $__from <= 21600000 THEN 300000\n    WHEN $__to - $__from <= 86400000 THEN 900000\n    ELSE 3600000 END) / 1000 AS time, SUM(CASE WHEN error = 0 THEN 1 ELSE 0 END) AS \"正常返回\", SUM(CASE WHEN error = 1 THEN 1 ELSE 0 END) AS \"错误返回\", SUM(CASE WHEN timeout = 1 THEN 1 ELSE 0 END) AS \"返回里标记超时\"\n      FROM rpc WHERE t >= $__from AND t < $__to GROUP BY time ORDER BY time",
+          "queryType": "table",
+          "timeColumns": [
+            "time"
+          ]
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 32,
+            "lineWidth": 2,
+            "showPoints": "auto",
+            "pointSize": 4,
+            "spanNulls": false,
+            "axisBorderShow": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "正常返回"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#5794F2"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "错误返回"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#73BF69"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "返回里标记超时"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#FF9830"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 10,
+      "title": "App Server 初始化与连接事件",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 0,
+        "y": 87,
+        "w": 14,
+        "h": 8
+      },
+      "description": "只计桌面端记录到的状态变化和初始化结果。",
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "codex-health-local"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "codex-health-local"
+          },
+          "rawQueryText": "SELECT (t / (CASE\n    WHEN $__to - $__from <= 3600000 THEN 60000\n    WHEN $__to - $__from <= 21600000 THEN 300000\n    WHEN $__to - $__from <= 86400000 THEN 900000\n    ELSE 3600000 END)) * (CASE\n    WHEN $__to - $__from <= 3600000 THEN 60000\n    WHEN $__to - $__from <= 21600000 THEN 300000\n    WHEN $__to - $__from <= 86400000 THEN 900000\n    ELSE 3600000 END) / 1000 AS time, SUM(CASE WHEN event = 'init_ok' THEN 1 ELSE 0 END) AS \"初始化成功\", SUM(CASE WHEN event = 'stop' THEN 1 ELSE 0 END) AS \"正常停止\", SUM(CASE WHEN event = 'reconnect' THEN 1 ELSE 0 END) AS \"尝试重连\", SUM(CASE WHEN event = 'disconnect' THEN 1 ELSE 0 END) AS \"意外断开\", SUM(CASE WHEN event = 'init_error' THEN 1 ELSE 0 END) AS \"初始化失败\", SUM(CASE WHEN event = 'timeout' THEN 1 ELSE 0 END) AS \"超时\"\n      FROM connection WHERE t >= $__from AND t < $__to GROUP BY time ORDER BY time",
+          "queryText": "SELECT (t / (CASE\n    WHEN $__to - $__from <= 3600000 THEN 60000\n    WHEN $__to - $__from <= 21600000 THEN 300000\n    WHEN $__to - $__from <= 86400000 THEN 900000\n    ELSE 3600000 END)) * (CASE\n    WHEN $__to - $__from <= 3600000 THEN 60000\n    WHEN $__to - $__from <= 21600000 THEN 300000\n    WHEN $__to - $__from <= 86400000 THEN 900000\n    ELSE 3600000 END) / 1000 AS time, SUM(CASE WHEN event = 'init_ok' THEN 1 ELSE 0 END) AS \"初始化成功\", SUM(CASE WHEN event = 'stop' THEN 1 ELSE 0 END) AS \"正常停止\", SUM(CASE WHEN event = 'reconnect' THEN 1 ELSE 0 END) AS \"尝试重连\", SUM(CASE WHEN event = 'disconnect' THEN 1 ELSE 0 END) AS \"意外断开\", SUM(CASE WHEN event = 'init_error' THEN 1 ELSE 0 END) AS \"初始化失败\", SUM(CASE WHEN event = 'timeout' THEN 1 ELSE 0 END) AS \"超时\"\n      FROM connection WHERE t >= $__from AND t < $__to GROUP BY time ORDER BY time",
+          "queryType": "table",
+          "timeColumns": [
+            "time"
+          ]
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 32,
+            "lineWidth": 2,
+            "showPoints": "auto",
+            "pointSize": 4,
+            "spanNulls": false,
+            "axisBorderShow": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "初始化成功"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#5794F2"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "正常停止"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#73BF69"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "尝试重连"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#FF9830"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "意外断开"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#F2495C"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "初始化失败"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#B877D9"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 11,
+      "title": "最近 App Server 连接事件",
+      "type": "table",
+      "gridPos": {
+        "x": 14,
+        "y": 87,
+        "w": 10,
+        "h": 8
+      },
+      "description": "展示最近 20 条有日志的事件。",
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "codex-health-local"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "codex-health-local"
+          },
+          "rawQueryText": "SELECT t/1000.0 AS time, CASE event WHEN 'init_ok' THEN '初始化成功' WHEN 'stop' THEN '正常停止'\n      WHEN 'init_error' THEN '初始化失败' WHEN 'reconnect' THEN '尝试重连' WHEN 'disconnect' THEN '意外断开'\n      WHEN 'timeout' THEN '超时' ELSE event END AS \"事件\", ms AS \"初始化耗时\"\n      FROM connection WHERE t >= $__from AND t < $__to ORDER BY t DESC LIMIT 20",
+          "queryText": "SELECT t/1000.0 AS time, CASE event WHEN 'init_ok' THEN '初始化成功' WHEN 'stop' THEN '正常停止'\n      WHEN 'init_error' THEN '初始化失败' WHEN 'reconnect' THEN '尝试重连' WHEN 'disconnect' THEN '意外断开'\n      WHEN 'timeout' THEN '超时' ELSE event END AS \"事件\", ms AS \"初始化耗时\"\n      FROM connection WHERE t >= $__from AND t < $__to ORDER BY t DESC LIMIT 20",
+          "queryType": "table",
+          "timeColumns": [
+            "time"
+          ]
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "—",
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "初始化耗时"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "ms"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      }
+    }
+  ]
+}
