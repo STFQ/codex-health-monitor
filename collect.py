@@ -8,6 +8,7 @@ import os
 import re
 import sqlite3
 import time
+from contextlib import closing
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -85,7 +86,7 @@ def failure_cause(message):
 
 def read_desktop(path):
     rpc, connection = [], []
-    with path.open(errors='replace') as handle:
+    with path.open(encoding='utf-8-sig', errors='replace') as handle:
         for line in handle:
             if '[AppServerConnection]' not in line:
                 continue
@@ -122,7 +123,7 @@ def read_desktop(path):
 
 def read_rollout(path):
     rows = {}
-    with path.open(errors='replace') as handle:
+    with path.open(encoding='utf-8-sig', errors='replace') as handle:
         active = None
         for line in handle:
             try:
@@ -176,7 +177,7 @@ def read_dns_endpoints(path):
         'proxy-server-nameserver', 'nameserver-policy', 'proxy-server-nameserver-policy',
     }
     field = None
-    with path.open(errors='replace') as handle:
+    with path.open(encoding='utf-8-sig', errors='replace') as handle:
         for line in handle:
             if not in_dns:
                 in_dns = bool(re.match(r'^dns:\s*(?:#.*)?$', line))
@@ -220,7 +221,7 @@ def dns_target_scope(host):
 
 def read_proxy(path):
     errors, observations, codex_timeouts, dns_rows = [], [], [], []
-    with path.open(errors='replace') as handle:
+    with path.open(encoding='utf-8-sig', errors='replace') as handle:
         for line in handle:
             is_error = 'error:' in line
             resolver_flow = 'mihomo -->' in line
@@ -309,7 +310,7 @@ def sync_dns_events(con, rows):
 
 def read_upstream(path, lower, upper):
     events = []
-    with sqlite3.connect(path.as_uri() + '?mode=ro', uri=True, timeout=5) as source:
+    with closing(sqlite3.connect(path.resolve().as_uri() + '?mode=ro', uri=True, timeout=5)) as source:
         for seconds, nanos, target, body in source.execute("""
             SELECT ts, ts_nanos, target, feedback_log_body FROM logs
             WHERE ts BETWEEN ? AND ? AND feedback_log_body IS NOT NULL AND target IN (
@@ -362,25 +363,59 @@ def source_info(label, files, newest, errors, note):
     return label, status, files, newest, note
 
 
+def default_desktop_dirs():
+    home = Path.home()
+    if os.name != 'nt':
+        return [home / 'Library/Logs/com.openai.codex']
+
+    local = Path(os.environ.get('LOCALAPPDATA', home / 'AppData/Local'))
+    packages = sorted((local / 'Packages').glob('OpenAI.Codex_*'))
+    return [local / 'Codex/Logs', *(path / 'LocalCache/Local/Codex/Logs' for path in packages)]
+
+
+def desktop_log_files(roots, dates):
+    files = {}
+    for root in roots:
+        for day in dates:
+            folder = day.strftime('%Y/%m/%d')
+            for path in (root / folder).glob('codex-desktop-*.log'):
+                # Prefer the regular install when Windows exposes a log in both locations.
+                files.setdefault((day, path.name), path)
+    return set(files.values())
+
+
+def add_source_arguments(parser):
+    home = Path.home()
+    if os.name == 'nt':
+        roaming = Path(os.environ.get('APPDATA', home / 'AppData/Roaming'))
+        clash = roaming / 'mihomo-party/logs'
+    else:
+        clash = home / 'Library/Application Support/mihomo-party/logs'
+    parser.add_argument('--codex-home', type=Path, default=Path(os.getenv('CODEX_HOME', home / '.codex')))
+    parser.add_argument('--desktop', type=Path, help='Override automatic discovery of Codex Desktop logs')
+    parser.add_argument('--clash', type=Path, default=clash, help='Mihomo Party core log directory')
+
+
 def collect(args, cache):
     now = int(time.time() * 1000)
     cutoff = now - args.days * 86400000
     today = datetime.now().date()
     dates = [today - timedelta(days=offset) for offset in range(-1, args.days + 2)]
-    desktop_files = {
-        path for day in dates for path in (args.desktop / day.strftime('%Y/%m/%d')).glob('codex-desktop-*.log')
-    }
+    desktop_dirs = default_desktop_dirs() if args.desktop is None else [args.desktop.expanduser()]
+    desktop_files = desktop_log_files(desktop_dirs, dates)
     recent_after = cutoff / 1000
+    codex_home = args.codex_home.expanduser().resolve()
     turn_files = set()
-    for path in (args.codex_home / 'sessions').glob('*/*/*/rollout-*.jsonl'):
+    for path in (codex_home / 'sessions').glob('*/*/*/rollout-*.jsonl'):
         try:
             if path.stat().st_mtime >= recent_after:
                 turn_files.add(path)
         except FileNotFoundError:
             continue
-    proxy_files = {args.clash / f'core-{day.isoformat()}.log' for day in dates}
+    clash = args.clash.expanduser()
+    proxy_files = {clash / f'core-{day.isoformat()}.log' for day in dates}
     proxy_files = {path for path in proxy_files if path.is_file()}
-    clash_home = args.clash.parent
+    clash_home = clash.parent
     dns_profiles = {clash_home / 'work/config.yaml', clash_home / 'mihomo.yaml'}
     dns_profiles.update((clash_home / 'profiles').glob('*.yaml'))
     dns_profiles.update((clash_home / 'profiles').glob('*.yml'))
@@ -412,7 +447,7 @@ def collect(args, cache):
         if cutoff <= row[0] <= now and (row[-1] is None or row[-1] in dns_endpoints)
     ]
 
-    log_db = args.codex_home / 'logs_2.sqlite'
+    log_db = codex_home / 'logs_2.sqlite'
     log_time, log_files, log_errors = None, 0, 0
     if log_db.is_file():
         try:
@@ -433,7 +468,7 @@ def collect(args, cache):
         source_info('Clash / Mihomo', len(proxy), proxy_time, proxy_errors, '拨号错误、codex 节点与 DNS 日志'),
     ]
     args.database.parent.mkdir(parents=True, exist_ok=True)
-    with sqlite3.connect(args.database, timeout=15) as con:
+    with closing(sqlite3.connect(args.database, timeout=15)) as con, con:
         con.executescript(SCHEMA)
         con.execute('BEGIN IMMEDIATE')
         for name, rows in tables.items():
@@ -453,18 +488,14 @@ def collect(args, cache):
 
 
 def main():
-    home = Path.home()
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--database', type=Path, required=True)
     parser.add_argument('--days', type=int, choices=range(1, 32), default=7, metavar='1–31')
     parser.add_argument('--follow', type=int, default=0, metavar='SECONDS')
-    parser.add_argument('--codex-home', type=Path, default=Path(os.getenv('CODEX_HOME', home / '.codex')))
-    parser.add_argument('--desktop', type=Path, default=home / 'Library/Logs/com.openai.codex')
-    parser.add_argument('--clash', type=Path, default=home / 'Library/Application Support/mihomo-party/logs')
+    add_source_arguments(parser)
     args = parser.parse_args()
     if args.follow and args.follow < 15:
         parser.error('--follow must be at least 15 seconds')
-    args.codex_home = args.codex_home.expanduser().resolve()
     cache = FileCache()
     while True:
         collect(args, cache)

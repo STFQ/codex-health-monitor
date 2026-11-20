@@ -1,6 +1,6 @@
 # Agent guide
 
-这是 macOS 上的单机监控。数据流为 Codex 与 Mihomo 本地日志 → Python 采集器 → SQLite → Grafana。应用使用 Python 标准库，后台由 launchd 管理。
+这是 Windows 和 macOS 上的单机监控。数据流为 Codex 与 Mihomo 本地日志 → Python 采集器 → SQLite → Grafana。应用使用 Python 标准库。Windows 后台由 `run_windows.py` 管理，macOS 后台由 launchd 管理。
 
 ## 先读哪些文件
 
@@ -8,7 +8,8 @@
 |---|---|
 | 解析日志、调整采样、修改 SQLite 表 | `collect.py` |
 | 改 Grafana 指标、布局和 SQL | `build_dashboard.py` |
-| 修改前台启动、Grafana 安装与数据源配置 | `run.sh` |
+| 修改 Windows 启动、Grafana 安装和数据源配置 | `run_windows.py` |
+| 修改 macOS 前台启动、Grafana 安装与数据源配置 | `run.sh` |
 | 修改 macOS 后台启动方式 | `service.sh` |
 | 确认字段语义、时间单位和诊断边界 | `docs/architecture.md` |
 | 复现 DNS 和节点日志的关键场景 | `tests/test_monitor.py` |
@@ -25,9 +26,9 @@
 ## 每次变更后运行
 
 ```sh
-python3 -m unittest discover -s tests -v
-python3 build_dashboard.py
-bash -n run.sh service.sh
+python -m unittest discover -s tests -v
+python build_dashboard.py
+bash -n run.sh && bash -n service.sh
 git diff --exit-code -- dashboard.json
 ```
 

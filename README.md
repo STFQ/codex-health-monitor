@@ -1,8 +1,36 @@
 # Codex 访问健康
 
-本机 Grafana 面板用于定位 Codex Desktop 等待、模型连接重试、Clash 拨号超时和 DNS 异常。采集器读取已有日志，把结构化事件写入 SQLite。默认回看最近 7 天，采集器与面板每 15 秒刷新。Grafana 在本机固定端口提供只读查看。
+本机 Grafana 面板用于定位 Codex Desktop 等待、模型连接重试、Clash 拨号超时和 DNS 异常。采集器读取已有日志，把结构化事件写入 SQLite，默认保留最近 7 天。面板初始展示 3 天，采集器与面板每 15 秒刷新。Grafana 在本机端口提供只读查看。
 
-## 快速启动
+## Windows 快速启动
+
+需要 Windows x64 和 Python 3.11.4 或更新版本。用 Git Bash 在仓库根目录执行：
+
+```bash
+python run_windows.py start
+```
+
+首次启动会下载并校验 Windows 版 Grafana OSS，安装 SQLite 数据源插件，并回填可读日志。用 `python run_windows.py status` 确认启动完成，再打开 [Codex 访问健康](http://127.0.0.1:3308/d/codex-health)。运行数据库、下载缓存和后台日志默认位于仓库内的 `.grafana-runtime`。
+
+| 操作 | 命令 |
+|---|---|
+| 查看后台状态 | `python run_windows.py status` |
+| 停止后台运行 | `python run_windows.py stop` |
+| 在终端前台运行 | `python run_windows.py run` |
+| 改用本机端口 3309 | `python run_windows.py start --port 3309` |
+| 单次采集到指定数据库 | `python collect.py --database codex-health.sqlite` |
+
+Windows 启动只需当前用户权限。后台进程可以在关闭终端后继续运行，重启后可以再次执行 `start`。查看启动或采集详情可读 `.grafana-runtime/service.log`。可通过 `GRAFANA_HOME` 指向已有的 Grafana 安装，或通过 `GRAFANA_RUNTIME_DIR` 指定运行目录。
+
+| 来源 | 默认路径 |
+|---|---|
+| Codex Desktop | `%LOCALAPPDATA%/Codex/Logs` 和 Microsoft Store 应用包下的 `LocalCache/Local/Codex/Logs` |
+| Codex 会话和运行时 | `%USERPROFILE%/.codex`，支持 `CODEX_HOME` |
+| Mihomo Party | `%APPDATA%/mihomo-party/logs` |
+
+`run_windows.py` 和 `collect.py` 都支持 `--desktop`、`--codex-home` 和 `--clash` 覆盖日志路径。未安装 Mihomo Party 时，面板仍可显示 Codex 数据。
+
+## macOS 快速启动
 
 需要 macOS 和 Python 3.11 或更新版本。在仓库根目录执行：
 
@@ -33,13 +61,13 @@ bash service.sh start
 ## 开发与验证
 
 ```sh
-python3 -m unittest discover -s tests -v
-python3 build_dashboard.py
-bash -n run.sh service.sh
+python -m unittest discover -s tests -v
+python build_dashboard.py
+bash -n run.sh && bash -n service.sh
 git diff --exit-code -- dashboard.json
 ```
 
-`collect.py` 是采集入口。`build_dashboard.py` 生成面板 JSON，修改面板时提交两者。AI agent 可以从 [AGENTS.md](AGENTS.md) 开始，数据表和采样边界见 [架构说明](docs/architecture.md)。
+`collect.py` 是采集入口。`build_dashboard.py` 生成面板 JSON，修改面板时提交两者。macOS 上也可用 `python3` 执行上述 Python 命令。AI agent 可以从 [AGENTS.md](AGENTS.md) 开始，数据表和采样边界见 [架构说明](docs/architecture.md)。
 
 现有 Grafana 实例也可以安装 [SQLite 数据源插件](https://grafana.com/grafana/plugins/frser-sqlite-datasource/)，将 UID 为 `codex-health-local` 的只读数据源指向采集器生成的数据库，再导入 `dashboard.json`。
 

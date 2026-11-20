@@ -8,10 +8,31 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from types import SimpleNamespace
 
-from collect import FileCache, collect
+from collect import FileCache, collect, desktop_log_files
 
 
 class MonitorTest(unittest.TestCase):
+    def test_desktop_log_discovery_combines_roots_without_duplicates(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            today = datetime.now().date()
+            yesterday = today - timedelta(days=1)
+            direct = root / 'Codex/Logs'
+            packaged = root / 'Packages/OpenAI.Codex_test/LocalCache/Local/Codex/Logs'
+
+            def log(directory, day, name):
+                path = directory / day.strftime('%Y/%m/%d') / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.touch()
+                return path
+
+            primary = log(direct, today, 'codex-desktop-duplicate.log')
+            log(packaged, today, primary.name)
+            older = log(packaged, yesterday, 'codex-desktop-packaged.log')
+            log(direct, yesterday - timedelta(days=1), 'codex-desktop-expired.log')
+
+            self.assertEqual(desktop_log_files([direct, packaged], [today, yesterday]), {primary, older})
+
     def test_dns_stages_and_dashboard_queries(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -69,7 +90,8 @@ class MonitorTest(unittest.TestCase):
                     ],
                 )
 
-                dashboard = json.loads(Path(__file__).resolve().parents[1].joinpath('dashboard.json').read_text())
+                dashboard_path = Path(__file__).resolve().parents[1] / 'dashboard.json'
+                dashboard = json.loads(dashboard_path.read_text(encoding='utf-8'))
                 from_ms = int((start - timedelta(seconds=1)).timestamp() * 1000)
                 to_ms = int(now.timestamp() * 1000)
                 for panel in dashboard['panels']:

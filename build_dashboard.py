@@ -262,4 +262,6 @@ dashboard = {'id': None, 'uid': 'codex-health', 'title': 'Codex · 访问健康'
              'timepicker': {'refresh_intervals': ['15s','30s','1m','5m','15m'],
                             'time_options': ['1h','6h','24h','3d','7d']},
              'templating': {'list': []}, 'panels': panels}
-Path(__file__).with_name('dashboard.json').write_text(json.dumps(dashboard, ensure_ascii=False, indent=2) + '\n')
+Path(__file__).with_name('dashboard.json').write_text(
+    json.dumps(dashboard, ensure_ascii=False, indent=2) + '\n', encoding='utf-8',
+)

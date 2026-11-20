@@ -7,13 +7,15 @@ flowchart LR
     Clash[Mihomo 日志与 DNS 配置] --> Collector
     Collector[collect.py] --> SQLite[(本机 SQLite)]
     SQLite --> Grafana[Grafana 面板]
-    Launchd[macOS launchd] --> Collector
-    Launchd --> Grafana
+    Launcher[Windows Python 启动器或 macOS launchd] --> Collector
+    Launcher --> Grafana
 ```
 
 ## 采集与启动
 
-`service.sh` 在当前登录会话注册任务，在用户私有运行目录安装项目文件。`run.sh` 启动采集器和 Grafana，并监听两个进程。Grafana 绑定 `127.0.0.1`，使用 Viewer 角色和只读 SQLite 数据源。
+Windows 的 `run_windows.py` 在项目运行目录安装独立的 Grafana 和 SQLite 插件，调度采集器并管理 Grafana 进程。Windows 采集器扫描普通安装和 Microsoft Store 的桌面日志目录，按日志日期和文件名去重，并从当前用户的 AppData 读取 Mihomo Party 日志。
+
+macOS 的 `service.sh` 在当前登录会话注册任务，在用户私有运行目录安装项目文件。`run.sh` 启动采集器和 Grafana，并监听两个进程。两平台的 Grafana 均绑定 `127.0.0.1`，使用 Viewer 角色和只读 SQLite 数据源。
 
 每轮采集重用未变化文件的解析结果，读取新增或变化的日志文件，并在一个 SQLite 事务中发布整个滚动窗口。Grafana 与采集器使用独立的 15 秒刷新周期。日志保留期决定实际可回看的范围。可用 `--codex-home`、`--desktop` 和 `--clash` 指定其他本机路径。
 
