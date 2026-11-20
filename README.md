@@ -2,6 +2,8 @@
 
 本机 Grafana 面板用于定位 Codex Desktop 等待、模型连接重试、Clash 拨号超时和 DNS 异常。采集器读取已有日志，把结构化事件写入 SQLite。默认回看最近 7 天，采集器与面板每 15 秒刷新。Grafana 在本机固定端口提供只读查看。
 
+![Grafana 看板截图，展示 Codex 响应延迟与 Clash 拨号超时](docs/images/grafana-dashboard.png)
+
 ## 快速启动
 
 需要 macOS 和 Python 3.11 或更新版本。在仓库根目录执行：
