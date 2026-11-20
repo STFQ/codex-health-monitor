@@ -9,6 +9,7 @@
 | 解析日志、调整采样、修改 SQLite 表 | `collect.py` |
 | 改 Grafana 指标、布局和 SQL | `build_dashboard.py` |
 | 修改 Windows 启动、Grafana 安装和数据源配置 | `run_windows.py` |
+| 修改 Windows 登录自启任务 | `windows_autostart.py` |
 | 修改 macOS 前台启动、Grafana 安装与数据源配置 | `run.sh` |
 | 修改 macOS 后台启动方式 | `service.sh` |
 | 确认字段语义、时间单位和诊断边界 | `docs/architecture.md` |

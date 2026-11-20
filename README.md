@@ -17,10 +17,13 @@ python run_windows.py start
 | 查看后台状态 | `python run_windows.py status` |
 | 停止后台运行 | `python run_windows.py stop` |
 | 在终端前台运行 | `python run_windows.py run` |
+| 启用登录自启 | `python run_windows.py enable-autostart` |
+| 查看自启状态 | `python run_windows.py autostart-status` |
+| 关闭登录自启 | `python run_windows.py disable-autostart` |
 | 改用本机端口 3309 | `python run_windows.py start --port 3309` |
 | 单次采集到指定数据库 | `python collect.py --database codex-health.sqlite` |
 
-Windows 启动只需当前用户权限。后台进程可以在关闭终端后继续运行，重启后可以再次执行 `start`。查看启动或采集详情可读 `.grafana-runtime/service.log`。可通过 `GRAFANA_HOME` 指向已有的 Grafana 安装，或通过 `GRAFANA_RUNTIME_DIR` 指定运行目录。
+Windows 启动只需当前用户权限。启用自启后，任务计划程序中的 **Codex Health Monitor** 会在当前 Windows 用户登录时启动监控。自启任务使用注册时指定的路径和端口，移动仓库或 Python 后需重新执行 `enable-autostart`。后台进程可以在关闭终端后继续运行。查看启动或采集详情可读 `.grafana-runtime/service.log`。可通过 `GRAFANA_HOME` 指向已有的 Grafana 安装，或通过 `GRAFANA_RUNTIME_DIR` 指定运行目录。
 
 | 来源 | 默认路径 |
 |---|---|

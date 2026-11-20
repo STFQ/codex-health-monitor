@@ -18,8 +18,10 @@ import zipfile
 from contextlib import contextmanager
 from pathlib import Path
 from urllib.request import ProxyHandler, build_opener, urlopen
+from xml.etree.ElementTree import ParseError
 
 from collect import FileCache, add_source_arguments, collect
+from windows_autostart import autostart
 
 BASE = Path(__file__).resolve().parent
 GRAFANA_VERSION = '13.2.3'
@@ -98,10 +100,10 @@ def grafana_command(home):
     raise OSError(f'Grafana executable missing in {home / "bin"}')
 
 
-def install(runtime, check_stop):
+def install(runtime, check_stop, grafana_home):
     downloads = runtime / 'downloads'
-    if 'GRAFANA_HOME' in os.environ:
-        home = Path(os.environ['GRAFANA_HOME']).expanduser().resolve()
+    if grafana_home is not None:
+        home = grafana_home.expanduser().resolve()
     else:
         home = runtime / f'grafana-{GRAFANA_VERSION}-windows-amd64'
         if not home.is_dir():
@@ -221,14 +223,23 @@ def stop(runtime):
     raise OSError(f'Still stopping. Check {runtime / "service.log"}')
 
 
+def launcher_command(executable, action, args):
+    command = [str(executable), '-X', 'utf8', '-u', str(BASE / 'run_windows.py'), action,
+               '--port', str(args.port), '--days', str(args.days)]
+    for option, value in (('--codex-home', args.codex_home), ('--clash', args.clash),
+                          ('--desktop', args.desktop), ('--runtime-dir', args.runtime_dir),
+                          ('--grafana-home', args.grafana_home)):
+        if value is not None:
+            command.extend([option, str(value.expanduser().resolve())])
+    return command
+
+
 def start(runtime, args):
     if active_service(runtime) is None:
-        command = [sys.executable, '-X', 'utf8', '-u', str(BASE / 'run_windows.py'), 'run',
-                   '--port', str(args.port), '--days', str(args.days)]
-        for option, value in (('--codex-home', args.codex_home), ('--clash', args.clash),
-                              ('--desktop', args.desktop)):
-            if value is not None:
-                command.extend([option, str(value)])
+        executable = Path(sys.executable)
+        if executable.name.lower() == 'pythonw.exe':
+            executable = executable.with_name('python.exe')
+        command = launcher_command(executable, 'run', args)
         with (runtime / 'service.log').open('ab') as log:
             worker = subprocess.Popen(
                 command, stdin=subprocess.DEVNULL, stdout=log, stderr=subprocess.STDOUT,
@@ -261,7 +272,7 @@ def run(runtime, args):
             with socket.socket() as probe:
                 probe.setsockopt(socket.SOL_SOCKET, socket.SO_EXCLUSIVEADDRUSE, 1)
                 probe.bind(('127.0.0.1', args.port))
-            command, home = install(runtime, check_stop)
+            command, home = install(runtime, check_stop, args.grafana_home)
             check_stop()
             args.database = runtime / 'codex-health.sqlite'
             cache = FileCache()
@@ -293,10 +304,14 @@ def run(runtime, args):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('command', choices=('run', 'start', 'status', 'stop'))
+    parser.add_argument('command', choices=(
+        'run', 'start', 'status', 'stop', 'enable-autostart', 'disable-autostart', 'autostart-status',
+    ))
     parser.add_argument('--port', type=int, default=os.getenv('GRAFANA_PORT', '3308'))
     parser.add_argument('--days', type=int, choices=range(1, 32), default=os.getenv('CODEX_HEALTH_DAYS', '7'),
                         metavar='1–31')
+    parser.add_argument('--runtime-dir', type=Path, default=os.getenv('GRAFANA_RUNTIME_DIR', BASE / '.grafana-runtime'))
+    parser.add_argument('--grafana-home', type=Path, default=os.getenv('GRAFANA_HOME'))
     add_source_arguments(parser)
     args = parser.parse_args()
     if os.name != 'nt':
@@ -309,7 +324,7 @@ def main():
         parser.error('--port must be between 1 and 65535')
     if not 1 <= args.days <= 31:
         parser.error('--days must be between 1 and 31')
-    runtime = Path(os.getenv('GRAFANA_RUNTIME_DIR', BASE / '.grafana-runtime')).expanduser().resolve()
+    runtime = args.runtime_dir.expanduser().resolve()
     try:
         if args.command in ('start', 'run'):
             runtime.mkdir(parents=True, exist_ok=True)
@@ -319,9 +334,16 @@ def main():
                 run(runtime, args)
         elif args.command == 'status':
             status(runtime)
-        else:
+        elif args.command == 'stop':
             stop(runtime)
-    except (OSError, subprocess.CalledProcessError, tarfile.TarError, zipfile.BadZipFile) as exc:
+        elif args.command == 'enable-autostart':
+            executable = Path(sys.executable).with_name('pythonw.exe')
+            if not executable.is_file():
+                raise OSError(f'Python windowless launcher missing at {executable}')
+            autostart(args.command, BASE, launcher_command(executable, 'start', args))
+        else:
+            autostart(args.command, BASE)
+    except (OSError, ParseError, subprocess.CalledProcessError, tarfile.TarError, zipfile.BadZipFile) as exc:
         print(f'Codex Health: {exc}', file=sys.stderr)
         return 1
     return 0
