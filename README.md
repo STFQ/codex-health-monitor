@@ -22,7 +22,11 @@ bash service.sh start
 | 改用本机端口 3309 | `GRAFANA_PORT=3309 bash service.sh start` |
 | 单次采集到指定数据库 | `python3 collect.py --database codex-health.sqlite` |
 
-后台服务依赖当前 macOS 登录会话，可在关闭 Codex 和终端后继续运行。退出登录或重启后，再执行启动命令。后台运行目录默认位于该用户的 macOS 私有临时目录，`service.sh status` 会显示服务日志路径。`GRAFANA_HOME` 可以指向已有的 Grafana 安装目录。
+启动命令会安装用户 LaunchAgent。每次登录 macOS 后，Grafana 和采集器都会自动启动。`bash service.sh stop` 会卸载启动项并保留数据。
+
+后台默认使用 `~/Library/Application Support/Codex Health Grafana` 保存 Grafana、插件、SQLite 数据和日志。启动时发现 SQLite 插件缺少关键文件，会从已缓存的安装包补齐。`service.sh status` 会显示服务日志路径，`GRAFANA_HOME` 可以指向已有的 Grafana 安装目录。
+
+从旧版临时目录安装升级时，先停止旧服务并备份原运行目录，再迁移历史数据。需要继续使用已有的持久运行目录时，可以在启动命令前指定 `GRAFANA_RUNTIME_DIR`。
 
 ## 面板怎么读
 

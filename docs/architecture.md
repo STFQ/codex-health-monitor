@@ -13,7 +13,7 @@ flowchart LR
 
 ## 采集与启动
 
-`service.sh` 在当前登录会话注册任务，在用户私有运行目录安装项目文件。`run.sh` 启动采集器和 Grafana，并监听两个进程。Grafana 绑定 `127.0.0.1`，使用 Viewer 角色和只读 SQLite 数据源。
+`service.sh` 安装用户 LaunchAgent，在每次登录时启动任务。项目文件和 SQLite 数据默认保存在用户的 `Library/Application Support` 中。`run.sh` 启动采集器和 Grafana，并监听两个进程。Grafana 绑定 `127.0.0.1`，使用 Viewer 角色和只读 SQLite 数据源。
 
 每轮采集重用未变化文件的解析结果，读取新增或变化的日志文件，并在一个 SQLite 事务中发布整个滚动窗口。Grafana 与采集器使用独立的 15 秒刷新周期。日志保留期决定实际可回看的范围。可用 `--codex-home`、`--desktop` 和 `--clash` 指定其他本机路径。
 

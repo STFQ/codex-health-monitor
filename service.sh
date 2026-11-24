@@ -6,7 +6,8 @@ umask 077
 base="$(cd -- "$(dirname -- "$0")" && pwd)"
 label=local.codex-health.grafana
 domain="gui/$(id -u)"
-runtime="${GRAFANA_RUNTIME_DIR:-$(getconf DARWIN_USER_TEMP_DIR)codex-health-grafana}"
+agent="$HOME/Library/LaunchAgents/$label.plist"
+runtime="${GRAFANA_RUNTIME_DIR:-$HOME/Library/Application Support/Codex Health Grafana}"
 port="${GRAFANA_PORT:-3308}"
 
 case "${1:-status}" in
@@ -42,6 +43,7 @@ plist = {
     'ProgramArguments': ['/bin/bash', str(base / 'run.sh')],
     'WorkingDirectory': str(base),
     'EnvironmentVariables': env,
+    'RunAtLoad': True,
     'KeepAlive': True,
     'ThrottleInterval': 20,
     'StandardOutPath': str(runtime / 'service.log'),
@@ -54,11 +56,16 @@ PY
       printf '%s\n' "$runtime/$label.plist"
       exit 0
     fi
-    launchctl bootstrap "$domain" "$runtime/$label.plist"
+    mkdir -p "$(dirname -- "$agent")"
+    install -m 600 "$runtime/$label.plist" "$agent"
+    launchctl bootstrap "$domain" "$agent"
     printf 'Loaded · http://127.0.0.1:%s/d/codex-health\nLog · %s/service.log\n' "$port" "$runtime"
     ;;
   stop)
-    launchctl bootout "$domain/$label"
+    if launchctl print "$domain/$label" >/dev/null 2>&1; then
+      launchctl bootout "$domain/$label"
+    fi
+    rm -f "$agent"
     ;;
   status)
     launchctl print "$domain/$label" | awk '/state =|pid =|last exit code =|stdout path =/'

@@ -37,7 +37,9 @@ else
 fi
 
 plugins="$runtime/plugins"
-if [[ ! -f "$plugins/$plugin/plugin.json" ]]; then
+plugin_dir="$plugins/$plugin"
+if [[ ! -s "$plugin_dir/plugin.json" || ! -s "$plugin_dir/module.js" ||
+      ! -s "$plugin_dir/MANIFEST.txt" || ! -x "$plugin_dir/gpx_sqlite-datasource_darwin_$arch" ]]; then
   mkdir -p "$plugins"
   if [[ ! -f "$runtime/sqlite-plugin.zip" ]]; then
     curl --fail --location --retry 2 --output "$runtime/sqlite-plugin.zip.part" \
